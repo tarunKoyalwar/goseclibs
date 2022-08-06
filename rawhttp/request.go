@@ -60,6 +60,11 @@ func (r *RawHttpRequest) getCookie() string {
 func (r *RawHttpRequest) GetRequest() *http.Request {
 	var req *http.Request
 
+	// update if request body is changed
+	if len(r.Body) > 0 {
+		r.HasBody = true
+	}
+
 	// Must construct URL Everytime to update changes
 	//Construct request url
 	var url *url.URL
@@ -83,17 +88,17 @@ func (r *RawHttpRequest) GetRequest() *http.Request {
 
 	cookie := r.getCookie()
 	if cookie != "" {
-		req.Header.Add("Cookie", cookie)
+		req.Header.Set("Cookie", cookie)
 	}
 
 	//Add remaining headers
 	for k, v := range r.Headers {
-		req.Header.Add(k, v)
+		req.Header.Set(k, v)
 	}
 
 	if r.ContentType != "" {
 		// Ovverrite Content-Type
-		req.Header.Add("Content-Type", r.ContentType)
+		req.Header.Set("Content-Type", r.ContentType)
 	}
 
 	return req
