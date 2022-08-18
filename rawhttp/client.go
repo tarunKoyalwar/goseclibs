@@ -16,6 +16,7 @@ var (
 	RespectRetryAfterHeader = true
 	MaxDialTimeout          = 10 // Should not be changed (unless explicitly required)
 	MaxHTTPTimeout          = 60 // Should not be changed (unless explicitly required)
+	Retryon502              = false
 )
 
 /*
@@ -214,6 +215,11 @@ func (c *SHTTPClient) Do(req *http.Request) (*http.Response, error) {
 			// retry in this case && check retry-after header
 			//parse retry after settings if given
 
+			if Retryon502 {
+				// if enabled retry
+				return c.retry(req, 1)
+			}
+
 			if RespectRetryAfterHeader {
 				if w, ok := resp.Header["Retry-After"]; ok {
 					if sleep, err := strconv.ParseInt(w[0], 10, 64); err == nil {
@@ -277,6 +283,11 @@ func (c *SHTTPClient) timeoutretry(req *http.Request, retrycount int) (*http.Res
 			// retry in this case && check retry-after header
 			//parse retry after settings if given
 
+			if Retryon502 {
+				// if enabled retry
+				return c.retry(req, retrycount)
+			}
+
 			if RespectRetryAfterHeader {
 				if w, ok := resp.Header["Retry-After"]; ok {
 					if sleep, err := strconv.ParseInt(w[0], 10, 64); err == nil {
@@ -306,6 +317,11 @@ func (c *SHTTPClient) retry(req *http.Request, retrycount int) (*http.Response, 
 			if c.RetryCount == retrycount {
 				return resp, err
 			} else {
+				if Retryon502 {
+					// if enabled retry
+					return c.retry(req, retrycount+1)
+				}
+
 				// Check if Retry-After Header is present
 				if RespectRetryAfterHeader {
 					if w, ok := resp.Header["Retry-After"]; ok {
